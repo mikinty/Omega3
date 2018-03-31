@@ -1,8 +1,13 @@
 import serial
 from random import randint
 import time
+import serial.tools.list_ports
 
-ard = serial.Serial('COM11', 9600, timeout=0)
+ports = list(serial.tools.list_ports.comports())
+
+arduinos = [p[0] for p in ports if p[0].startswith('/dev/ttyACM')]
+print(arduinos)
+ard = serial.Serial(arduinos[0], timeout=0)
 
 def generateMatrix():
     m = []
@@ -28,4 +33,4 @@ while(True):
     time.sleep(1)
     print(ard.read(1000))
     time.sleep(1)
-            
+

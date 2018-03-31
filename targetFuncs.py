@@ -5,6 +5,9 @@
 
 from math import sqrt
 
+# circle radius
+r = 3
+
 def yGeZero(x, y):
   return y > 0
 
@@ -14,7 +17,10 @@ def xGeZero(x, y):
 def checkerboard(x, y):
   return ((x >= 0) and (y >= 0)) or ((x <= 0) and (y <= 0))
 
-def circle(x, y, r):
+def circle(x, y):
   return sqrt(x*x + y*y) <= r
+
+def diag(x, y):
+  return (x == y) or (x == (y+1)) or (x == (y-1))
 
 
