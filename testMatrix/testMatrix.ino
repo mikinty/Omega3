@@ -3,7 +3,12 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
-Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
+Adafruit_8x8matrix hOne1 = Adafruit_8x8matrix();
+Adafruit_8x8matrix hOne2 = Adafruit_8x8matrix();
+Adafruit_8x8matrix hOne3 = Adafruit_8x8matrix();
+Adafruit_8x8matrix hTwo1 = Adafruit_8x8matrix();
+Adafruit_8x8matrix hTwo2 = Adafruit_8x8matrix();
+
 uint16_t curX=0;
 uint16_t curY=0;
 
@@ -12,7 +17,7 @@ void setup() {
   Serial.setTimeout(0);
   // Serial.println("initializing\n");
 
-  matrix.begin(0x71);
+  matrix.begin(0x73);
   matrix.clear();
   matrix.writeDisplay();
 }
