@@ -140,9 +140,10 @@ for epoch in xrange(300):
    tempArr= pesos_conexiones(net)
    #print (tempArr)
 
-   # print error
+   # TRAIN NN and report error
    print('Back train error:', back.train()) #error
 
+   # for debugging purposes
    params1 = in_to_hidden.params
    #print("in_to_hidden:", params1)
    params2 = hidden_to_hidden2.params
@@ -154,16 +155,20 @@ for epoch in xrange(300):
    for x in range(-4,4):
       outputList = []
       for y in range(-4,4):
-         inArr = [x,y,x*x, y*y,x*y,math.sin(x), math.sin(y)]
+         inArr = [x,y, x*x, y*y, x*y, math.sin(x), math.sin(y)]
+
+         # predict with NN
          compute = net.activate(inArr)
-         if compute>0.5:
-            print "1",
+
+         if compute > 0.5:
+            print("1", end='')
             outputList.append(1)
          else:
-            print "0",
+            print("0", end='')
             outputList.append(0)
       outputMatrix.append(outputList)
-      print "\n"
+      print("\n")
+
    sendMatrix(outputMatrix)
 
    # debugging prints
