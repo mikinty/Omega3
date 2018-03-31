@@ -9,6 +9,7 @@ uint16_t curY=0;
 
 void setup() {
   Serial.begin(9600);
+  Serial.setTimeout(0);
   // Serial.println("initializing\n");
 
   matrix.begin(0x71);
@@ -26,7 +27,6 @@ void loop() {
       matrix.clear();
       matrix.writeDisplay();
     }
-    Serial.print(in);
     if(in=='0') {
       curX++;
     }
