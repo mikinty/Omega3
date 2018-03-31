@@ -3,6 +3,7 @@ import random
 import math
 import time
 import serial
+import serial.tools.list_ports
 
 # target functions
 import targetFuncs
@@ -16,7 +17,11 @@ from pybrain.structure import LinearLayer, SigmoidLayer
 from pybrain.structure import FullConnection
 
 # hook up arduino to serial port
-ard = serial.Serial('/dev/cu.usbmodem1421')
+ports = list(serial.tools.list_ports.comports())
+
+arduinos = [p[0] for p in ports if p[0].startswith('/dev/ttyACM')]
+print(arduinos)
+ard = serial.Serial(arduinos[0], timeout=0)
 
 # Type of NN we are using
 net = FeedForwardNetwork()
@@ -25,19 +30,18 @@ net = FeedForwardNetwork()
 numEpochs = 300
 numFeatures = 7
 numTrain = 50
-(xMin, xMax, yMin, yMax) = (-4, -4, 4, 4) # dim. of LED matrix
-displayRate = 1 # period of display time
+(xMin, xMax, yMin, yMax) = (-4, 4, -4, 4) # dim. of LED matrix
+displayRate = 0.5 # period of display time
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
 # function for sending data to matrix
 def sendMatrix(m):
-    ard.write(b's')
+    ard.write(b's') # signal start
     for i in m:
         for j in i:
             ard.write(str(j).encode())
-    ard.write(b's')
 
 # print out NN weights
 def pesos_conexiones(n):
@@ -57,7 +61,7 @@ def calcInstant(inArr, paramArr, index, index2):
       total = 0
       for y in range(0, numFeatures):
          total = paramArr[numFeatures*x + y]*inArr[y]+total
-      hidden1.append(sigmoid(total))   
+      hidden1.append(sigmoid(total))
    # print("hidden1:", hidden1)
 
    hidden2 = []
@@ -65,7 +69,7 @@ def calcInstant(inArr, paramArr, index, index2):
       total = 0
       for y in range(0,3):
          total=paramArr[3*x+y+21]*hidden1[y]+total
-      hidden2.append(sigmoid(total))   
+      hidden2.append(sigmoid(total))
    # print("hidden2:", hidden2)
 
    total = 0
@@ -99,10 +103,13 @@ def generateData(N):
       inputArr.append([xVal, yVal, xVal*xVal, yVal*yVal, xVal*yVal, math.sin(xVal), math.sin(yVal)])
 
       # Labels for input data
-      if targetFuncs.yGeZero(xVal, yVal):
+      if targetFuncs.checkerboard(xVal, yVal):
          outputArr.append([1])
       else:
          outputArr.append([0])
+
+   print('Output DATA')
+   print(outputArr)
 
    return inputArr, outputArr
 
@@ -144,18 +151,19 @@ def setupNN(inputArr, outputArr, numFeatures, nodesH1, nodesH2):
 def trainNN(model, numEpochs):
    for epoch in range(numEpochs):
       # Give time for the LED Matrix to show things
+      print('epoch', epoch)
       time.sleep(displayRate)
-      tempArr = pesos_conexiones(net)
+      # tempArr = pesos_conexiones(net)
 
       # TRAIN NN and report error
       print('Model train error:', model.train()) #error
 
       # for debugging purposes
-      params1 = in_to_hidden.params
+      #params1 = in_to_hidden.params
       #print("in_to_hidden:", params1)
-      params2 = hidden_to_hidden2.params
+      #params2 = hidden_to_hidden2.params
       #print("hidden_to_hidden2:",  params2)
-      params3 = hidden2_to_out.params
+      #params3 = hidden2_to_out.params
 
       ### Print to LED Matrix ###
       print('Sending to LED matrix:')
@@ -179,6 +187,7 @@ def trainNN(model, numEpochs):
 
       sendMatrix(outputMatrix)
 
+      """
       # debugging prints
       for k in range(0, 3):
          print("hidden1[", k, "]")
@@ -198,11 +207,12 @@ def trainNN(model, numEpochs):
                calcInstant(inArr,tempArr,h,-1)
             print("\n")
 
-   
+      """
+
 """
 for i,j in zip(inputArr, outputArr):
    compute = net.activate(i)
-   
+
   # print('Target: ', j , ' Output: ', compute)
 """
 """
