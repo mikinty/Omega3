@@ -29,7 +29,7 @@ net = FeedForwardNetwork()
 # parameters
 numEpochs = 300
 numFeatures = 7
-numTrain = 50
+numTrain = 100
 (xMin, xMax, yMin, yMax) = (-4, 4, -4, 4) # dim. of LED matrix
 displayRate = 0.5 # period of display time
 
@@ -89,7 +89,7 @@ def calcInstant(inArr, paramArr, index, index2):
       else:
          print("0", end ='')
 
-def generateData(N):
+def generateData(N, funNumber):
    inputArr = []
    outputArr = []
 
@@ -102,8 +102,17 @@ def generateData(N):
       # NN input data
       inputArr.append([xVal, yVal, xVal*xVal, yVal*yVal, xVal*yVal, math.sin(xVal), math.sin(yVal)])
 
+      # Choose function
+      lib = {
+        0: targetFuncs.yGeZero,
+        1: targetFuncs.xGeZero,
+        2: targetFuncs.checkerboard,
+        3: targetFuncs.circle
+      }
+
       # Labels for input data
-      if targetFuncs.checkerboard(xVal, yVal):
+      # if targetFuncs.checkerboard(xVal, yVal):
+      if (lib[funNumber])(xVal, yVal):
          outputArr.append([1])
       else:
          outputArr.append([0])
@@ -226,7 +235,7 @@ for x in range(-4,4):
 """
 
 if __name__ == '__main__':
-   inputData, outputData = generateData(numTrain)
+   inputData, outputData = generateData(numTrain, 1)
    model = setupNN(inputData, outputData, numFeatures, 3, 2)
    trainNN(model, numEpochs)
 
