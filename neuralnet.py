@@ -38,8 +38,9 @@ def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
 # function for sending data to matrix
-def sendMatrix(m):
+def sendMatrix(m, cube):
     ard.write(b's') # signal start
+    ard.write(str(cube).encode()) # indicate which cube
     for i in m:
         for j in i:
             ard.write(str(j).encode())
@@ -280,13 +281,13 @@ def trainNN(model, numEpochs):
          print()
 
       print()
-      print(hOne1)
-      print(hOne2)
-      print(hOne3)
-      print(hTwo1)
-      print(hTwo2)
-      # sendMatrix(outputMatrix)
-      sendMatrix(hTwo2)
+      sendMatrix(hOne1, 0)
+      sendMatrix(hOne2, 1)
+      sendMatrix(hOne3, 2)
+      sendMatrix(hTwo1, 3)
+      sendMatrix(hTwo2, 4)
+      # sendMatrix(outputMatrix, 5)
+      # sendMatrix(hTwo2)
 
       """
       # debugging prints
