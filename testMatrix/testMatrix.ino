@@ -90,6 +90,8 @@ void setup() {
     case 6:
       h1.begin(0x76);
       break;
+    default:
+      h1.begin(0x70);
   }
   
   switch(adr2) {
@@ -111,6 +113,8 @@ void setup() {
     case 6:
       h2.begin(0x76);
       break;
+    default:
+      h2.begin(0x70);
   }
   
   switch(adr3) {
@@ -132,6 +136,8 @@ void setup() {
     case 6:
       h3.begin(0x76);
       break;
+    default:
+      h3.begin(0x70);
   }
 }
 
@@ -169,10 +175,12 @@ void loop() {
       h1.writeDisplay();
       currMatrix = 1;
     } else if (in == '3') {
+      
       h2.clear();
       h2.writeDisplay();
       currMatrix = 2;
     } else if (in == '4') {
+      
       h3.clear();
       h3.writeDisplay();
       currMatrix = 3;

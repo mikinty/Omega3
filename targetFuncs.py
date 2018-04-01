@@ -21,6 +21,6 @@ def circle(x, y):
   return sqrt(x*x + y*y) <= r
 
 def diag(x, y):
-  return (x == y) or (x == (y+1)) or (x == (y-1))
+  return (int(x) == int(y)) or (int(x) == int(y+1)) or (int(x) == int(y-1))
 
 
