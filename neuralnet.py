@@ -16,6 +16,10 @@ from pybrain.supervised.trainers import BackpropTrainer # training alg
 from pybrain.structure import LinearLayer, SigmoidLayer
 from pybrain.structure import FullConnection
 
+# plotting library
+import numpy as np
+import matplotlib.pyplot as plt
+
 # hook up arduino to serial port
 ports = list(serial.tools.list_ports.comports())
 
@@ -72,9 +76,9 @@ def pesos_conexiones(n):
    for mod in n.modules:
       for conn in n.connections[mod]:
          temp = []
-         print(conn)
+         # print(conn)
          for cc in range(len(conn.params)):
-            print(conn.whichBuffers(cc), conn.params[cc])
+            # print(conn.whichBuffers(cc), conn.params[cc])
             temp.append(conn.params[cc])
 
          if len(temp) == 21:
@@ -104,7 +108,8 @@ def generateData(N, funNumber):
         0: targetFuncs.yGeZero,
         1: targetFuncs.xGeZero,
         2: targetFuncs.checkerboard,
-        3: targetFuncs.circle
+        3: targetFuncs.circle,
+        4: targetFuncs.diag
       }
 
       # Labels for input data
@@ -117,7 +122,7 @@ def generateData(N, funNumber):
    print('Output DATA')
    print(outputArr)
 
-   return inputArr, outputArr
+   return inputArr, outputArr, lib[funNumber]
 
 
 def setupNN(inputArr, outputArr, numFeatures, nodesH1, nodesH2):
@@ -170,7 +175,7 @@ def trainNN(model, numEpochs):
       print('epoch', epoch)
       time.sleep(displayRate)
       params = pesos_conexiones(net)
-      print(params)
+      # print(params)
 
       # TRAIN NN and report error
       print('Model train error:', model.train()) #error
@@ -187,7 +192,7 @@ def trainNN(model, numEpochs):
       hToH3 = h2Params[6:]
 
       ### Print to LED Matrix ###
-      print('Sending to LED matrix:')
+      print('Output Layer:')
       outputMatrix = []
       hOne1 = []
       hOne2 = []
@@ -269,7 +274,35 @@ def trainNN(model, numEpochs):
 
 
 if __name__ == '__main__':
-   inputData, outputData = generateData(numTrain, 2)
+    # creating input data
+   inputData, outputData, refFunc = generateData(numTrain, 4)
+
+   # set up model
    model = setupNN(inputData, outputData, numFeatures, numHiddenUnits1, numHiddenUnits2)
+
+   # set up plotting
+   plt.ion() # interactive plotting
+
+   # Reference solution
+   xRefPos = []
+   xRefNeg = []
+   yRefPos = []
+   yRefNeg = []
+
+   for x in range(-4, 4):
+      for y in range(-4, 4):
+         if refFunc(x, y):
+            xRefPos.append(x)
+            yRefPos.append(y)
+         else:
+            xRefNeg.append(x)
+            yRefNeg.append(y)
+
+   # reference solution
+   plt.figure(1)
+   plt.plot(xRefPos, yRefPos, '+', xRefNeg, yRefNeg, 'o')
+   plt.pause(0.5)
+
+   # train model
    trainNN(model, numEpochs)
 
