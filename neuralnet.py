@@ -289,8 +289,9 @@ def trainNN(model, numEpochs):
 
 
 if __name__ == '__main__':
-    # creating input data
-   inputData, outputData, refFunc = generateData(numTrain, 4)
+   # creating input data
+   num = max(int(input("What function would you like to try?")), 4)
+   inputData, outputData, refFunc = generateData(numTrain, num)
 
    # set up model
    model = setupNN(inputData, outputData, numFeatures, numHiddenUnits1, numHiddenUnits2)
