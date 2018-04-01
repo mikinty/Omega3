@@ -10,7 +10,6 @@
 Adafruit_8x8matrix h1 = Adafruit_8x8matrix();
 Adafruit_8x8matrix h2 = Adafruit_8x8matrix();
 Adafruit_8x8matrix h3 = Adafruit_8x8matrix();
-Adafruit_8x8matrix currMatrix;
 
 // Keep track of where we're writing on the matrix
 uint16_t curX = 0;
@@ -20,7 +19,7 @@ int numAddr = 3;
 int adrLength = 3;
 int adrTotal = 9; // numAddr * adrLength
 int adrPins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10};
-int adresses[9]; // store the addresses
+int addresses[9]; // store the addresses
 int currMatrix = 1;
 // int dAdr[3]; // digital version of address
 
@@ -61,9 +60,9 @@ void setup() {
   // read the addresses
   Serial.println("Detecting LED matrices...");
   
-  int adr1 = findAddr(0);
-  int adr2 = findAddr(3);
-  int adr3 = findAddr(6);
+  int adr1 = findAddr(2);
+  int adr2 = findAddr(5);
+  int adr3 = findAddr(8);
   Serial.print("Addresses: ");
   Serial.print(adr1);
   Serial.print(" ");
@@ -134,9 +133,6 @@ void setup() {
       h3.begin(0x76);
       break;
   }
-  
-  // by default
-  currMatrix = h1; 
 }
 
 void loop() {
@@ -147,20 +143,39 @@ void loop() {
     // start signal for printing a matrix
     if(in == 's') {
       // reset values
-      curX=0;
-      curY=0;
+      curX = 0;
+      curY = 0;
     } else if (in == '0') { // display values on matrix
       curX++;
     } else if (in == '1') {
-      currMatrix.drawPixel(curX,curY, LED_ON);
-      currMatrix.writeDisplay();
-      curX++;
+      switch(currMatrix) {
+        case 1:
+          h1.drawPixel(curX,curY, LED_ON);
+          h1.writeDisplay();
+          break;
+        case 2:
+          h2.drawPixel(curX,curY, LED_ON);
+          h2.writeDisplay();
+          break;
+        case 3:
+          h3.drawPixel(curX,curY, LED_ON);
+          h3.writeDisplay();
+          break;
+      }
+      
+      curX++; // increment for next spot
     } else if (in == '2') { // choose another matrix to control
-      currMatrix = h1;
+      h1.clear();
+      h1.writeDisplay();
+      currMatrix = 1;
     } else if (in == '3') {
-      currMatrix = h2;
+      h2.clear();
+      h2.writeDisplay();
+      currMatrix = 2;
     } else if (in == '4') {
-      currMatrix = h3;
+      h3.clear();
+      h3.writeDisplay();
+      currMatrix = 3;
     }
     
     // wrap around the matrix rows
