@@ -19,9 +19,17 @@ from pybrain.structure import FullConnection
 # hook up arduino to serial port
 ports = list(serial.tools.list_ports.comports())
 
-arduinos = [p[0] for p in ports if p[0].startswith('/dev/ttyACM')]
-print(arduinos)
-ard = serial.Serial(arduinos[0], timeout=0)
+hidden2Serial = '55333303934351915152'
+hidden1Serial = '855393139313517121F1'
+
+print(ports)
+arduinoS1 = [p[0] for p in ports if (hidden1Serial in p[2])]
+arduinoS2 = [p[0] for p in ports if (hidden2Serial in p[2])]
+
+print(arduinoS1, arduinoS2)
+
+ard1 = serial.Serial(arduinoS1[0], timeout=0)
+ard2 = serial.Serial(arduinoS2[0], timeout=0)
 
 # Type of NN we are using
 net = FeedForwardNetwork()
@@ -31,68 +39,51 @@ netOne = FeedForwardNetwork()
 numEpochs = 300
 numFeatures = 7
 numTrain = 100
+numHiddenUnits1 = 3
+numHiddenUnits2 = 3
 (xMin, xMax, yMin, yMax) = (-4, 4, -4, 4) # dim. of LED matrix
 displayRate = 0.5 # period of display time
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
 
+
 # function for sending data to matrix
-def sendMatrix(m, cube):
-    ard.write(b's') # signal start
-    ard.write(str(cube).encode()) # indicate which cube
-    for i in m:
-        for j in i:
-            ard.write(str(j).encode())
+def sendMatrix(m, layer, matrixNum):
+   arduino = ard1 # default
+
+   if layer == 2:
+      arduino = ard2
+
+   arduino.write(b's') # signal start
+   arduino.write(str(matrixNum).encode()) # indicate which neuron
+
+   # send over data for matrix
+   for i in m:
+      for j in i:
+         arduino.write(str(j).encode())
+
 
 # print out NN weights
 def pesos_conexiones(n):
-    paramArr = []
-    for mod in n.modules:
-        for conn in n.connections[mod]:
-            temp = []
-            for cc in range(len(conn.params)):
-                print(conn.whichBuffers(cc), conn.params[cc])
-                temp.append(conn.params[cc])
-            paramArr.append(temp)
-    return paramArr
+   paramArr = {}
+   for mod in n.modules:
+      for conn in n.connections[mod]:
+         temp = []
+         print(conn)
+         for cc in range(len(conn.params)):
+            print(conn.whichBuffers(cc), conn.params[cc])
+            temp.append(conn.params[cc])
+
+         if len(temp) == 21:
+            paramArr['h1'] = temp
+         elif len(temp) == 9:
+            paramArr['h2'] = temp
+
+   return paramArr
 
 
-
-def calcInstant(inArr, paramArr, index, index2):
-   hidden1 = []
-   for x in range(0, 3):
-      total = 0
-      for y in range(0, numFeatures):
-         total = paramArr[numFeatures*x + y]*inArr[y]+total
-      hidden1.append(sigmoid(total))
-   # print("hidden1:", hidden1)
-
-   hidden2 = []
-   for x in range(0,2):
-      total = 0
-      for y in range(0,3):
-         total=paramArr[3*x+y+21]*hidden1[y]+total
-      hidden2.append(sigmoid(total))
-   # print("hidden2:", hidden2)
-
-   total = 0
-
-   for x in range(0, 2):
-      total = total+hidden2[x]*paramArr[27+x]
-   if index == 2:
-      print("Total:", total)
-   elif index > -1:
-      if hidden2[index] > 0.5:
-         print("1", end='')
-      else:
-         print("0", end='')
-   elif index2 > -1:
-      if hidden1[index2] > 0.5:
-         print("1", end='')
-      else:
-         print("0", end ='')
-
+# generate data for the model to train on
 def generateData(N, funNumber):
    inputArr = []
    outputArr = []
@@ -103,7 +94,7 @@ def generateData(N, funNumber):
       xVal = random.uniform(xMin, xMax)
       yVal = random.uniform(yMin, yMax)
 
-      # NN input data
+      # NN input data with features
       inputArr.append([xVal, yVal, xVal*xVal, yVal*yVal, xVal*yVal, math.sin(xVal), math.sin(yVal)])
 
       # Choose function
@@ -139,42 +130,25 @@ def setupNN(inputArr, outputArr, numFeatures, nodesH1, nodesH2):
    hiddenLayer2 = SigmoidLayer(nodesH2)
    outLayer = LinearLayer(1)
 
-   inL1 = LinearLayer(numFeatures)
-   hL1 = SigmoidLayer(nodesH1)
-   oL1 = LinearLayer(1)
-
    # Add NN components
    net.addInputModule(inLayer)
    net.addModule(hiddenLayer)
    net.addModule(hiddenLayer2)
    net.addOutputModule(outLayer)
 
-   # Only one hidden layer
-   netOne.addInputModule(inL1)
-   netOne.addModule(hL1)
-   netOne.addOutputModule(oL1)
-
    # Make neural network connections
    in_to_hidden = FullConnection(inLayer, hiddenLayer)
    hidden_to_hidden2 = FullConnection(hiddenLayer, hiddenLayer2)
    hidden2_to_out = FullConnection(hiddenLayer2, outLayer)
 
-   i2h1 = FullConnection(inL1, hL1)
-   h2o1 = FullConnection(hL1, oL1)
 
    net.addConnection(in_to_hidden)
    net.addConnection(hidden_to_hidden2) # lazy full connection
    net.addConnection(hidden2_to_out)
 
-   netOne.addConnection(i2h1)
-   netOne.addConnection(h2o1)
-
    # Chris: don't delete this
    net.sorted = False
    net.sortModules() # random command to make this work
-
-   netOne.sorted = False
-   netOne.sortModules()
 
    # add dataset to the NN
    ds = SupervisedDataSet(7,1)
@@ -184,9 +158,8 @@ def setupNN(inputArr, outputArr, numFeatures, nodesH1, nodesH2):
 
    # training algorithm
    m1 = BackpropTrainer(net, ds)
-   m2 = BackpropTrainer(netOne, ds)
 
-   return m1, m2
+   return m1
 
 
 def trainNN(model, numEpochs):
@@ -200,21 +173,16 @@ def trainNN(model, numEpochs):
       # TRAIN NN and report error
       print('Model train error:', model.train()) #error
 
-      # for debugging purposes
-      # params1 = in_to_hidden.params
-      #print("in_to_hidden:", params1)
-      #params2 = hidden_to_hidden2.params
-      ##print("hidden_to_hidden2:",  params2)
-      #params3 = hidden2_to_out.params
-      #print("hidden2_to_out:",  params3)
-
       # parse params
-      inToH1 = params[0][0:7]
-      inToH2 = params[0][7:14]
-      inToH3 = params[0][14:]
+      h1Params = params['h1']
+      inToH1 = h1Params[0:7]
+      inToH2 = h1Params[7:14]
+      inToH3 = h1Params[14:]
 
-      hToH1 = params[1][0:3]
-      hToH2 = params[1][3:]
+      h2Params = params['h2']
+      hToH1 = h2Params[0:3]
+      hToH2 = h2Params[3:6]
+      hToH3 = h2Params[6:]
 
       ### Print to LED Matrix ###
       print('Sending to LED matrix:')
@@ -225,6 +193,7 @@ def trainNN(model, numEpochs):
 
       hTwo1 = []
       hTwo2 = []
+      hTwo3 = []
 
       # Compute the node values
       for x in range(-4, 4):
@@ -235,6 +204,7 @@ def trainNN(model, numEpochs):
 
          hT1 = []
          hT2 = []
+         hT3 = []
 
          for y in range(-4, 4):
             inArr = [x,y, x*x, y*y, x*y, math.sin(x), math.sin(y)]
@@ -259,10 +229,12 @@ def trainNN(model, numEpochs):
             # hidden layer 2
             temp21 = 0 + (sigmoid(sum(i[0]*i[1] for i in zip(hLayer1, hToH1)) + bias) >= 0.5)
             temp22 = 0 + (sigmoid(sum(i[0]*i[1] for i in zip(hLayer1, hToH2)) + bias) >= 0.5)
+            temp23 = 0 + (sigmoid(sum(i[0]*i[1] for i in zip(hLayer1, hToH3)) + bias) >= 0.5)
 
 
             hT1.append(temp21)
             hT2.append(temp22)
+            hT3.append(temp23)
 
             if compute > 0.5:
                print("1", end='')
@@ -277,58 +249,25 @@ def trainNN(model, numEpochs):
          hOne3.append(hO3)
          hTwo1.append(hT1)
          hTwo2.append(hT2)
+         hTwo3.append(hT3)
 
          print()
 
       print()
-      sendMatrix(hOne1, 0)
-      sendMatrix(hOne2, 1)
-      sendMatrix(hOne3, 2)
-      sendMatrix(hTwo1, 3)
-      sendMatrix(hTwo2, 4)
+
+      # display data on LED matrices
+      sendMatrix(hOne1, 1, 0)
+      sendMatrix(hOne2, 1, 1)
+      sendMatrix(hOne3, 1, 2)
+      sendMatrix(hTwo1, 2, 0)
+      sendMatrix(hTwo2, 2, 1)
+      sendMatrix(hTwo3, 2, 2)
+
       # sendMatrix(outputMatrix, 5)
-      # sendMatrix(hTwo2)
 
-      """
-      # debugging prints
-      for k in range(0, 3):
-         print("hidden1[", k, "]")
-         for x in range(-4, 4):
-         # print "h",h,
-            for y in range(-4, 4):
-               inArr = [x,y,x*x, y*y,x*y,math.sin(x), math.sin(y)]
-               calcInstant(inArr,tempArr,-1,k)
-            print()
-
-      for h in range(0, 2):
-         print("hidden2[", h, "]")
-         for x in range(-4, 4):
-         # print "h",h,
-            for y in range(-4,4):
-               inArr = [x,y,x*x, y*y,x*y,math.sin(x), math.sin(y)]
-               calcInstant(inArr,tempArr,h,-1)
-            print("\n")
-
-      """
-
-"""
-for i,j in zip(inputArr, outputArr):
-   compute = net.activate(i)
-
-  # print('Target: ', j , ' Output: ', compute)
-"""
-"""
-print("final display array: row outside, col inside")
-for x in range(-4,4):
-   for y in range(-4,4):
-      compute = net.activate([x,y,x*x, y*y,x*y,math.sin(x), math.sin(y)])
-      print(compute + " ")
-   print(' \n')
-#print(ds)
-"""
 
 if __name__ == '__main__':
    inputData, outputData = generateData(numTrain, 2)
-   model1, model2 = setupNN(inputData, outputData, numFeatures, 3, 2)
-   trainNN(model1, numEpochs)
+   model = setupNN(inputData, outputData, numFeatures, numHiddenUnits1, numHiddenUnits2)
+   trainNN(model, numEpochs)
 
