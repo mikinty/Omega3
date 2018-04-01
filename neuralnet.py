@@ -52,13 +52,15 @@ def sigmoid(x):
 def sendMatrix(m, layer, matrixNum):
    arduino = ard1 # default
 
+   # choose the arduino based on layer
    if layer == 2:
       arduino = ard2
 
    arduino.write(b's') # signal start
+
    arduino.write(str(matrixNum).encode()) # indicate which neuron
 
-   # send over data for matrix
+   # send over data for matrix display
    for i in m:
       for j in i:
          arduino.write(str(j).encode())
@@ -256,12 +258,12 @@ def trainNN(model, numEpochs):
       print()
 
       # display data on LED matrices
-      sendMatrix(hOne1, 1, 0)
-      sendMatrix(hOne2, 1, 1)
-      sendMatrix(hOne3, 1, 2)
-      sendMatrix(hTwo1, 2, 0)
-      sendMatrix(hTwo2, 2, 1)
-      sendMatrix(hTwo3, 2, 2)
+      sendMatrix(hOne1, 1, 2)
+      sendMatrix(hOne2, 1, 3)
+      sendMatrix(hOne3, 1, 4)
+      sendMatrix(hTwo1, 2, 2)
+      sendMatrix(hTwo2, 2, 3)
+      sendMatrix(hTwo3, 2, 4)
 
       # sendMatrix(outputMatrix, 5)
 
