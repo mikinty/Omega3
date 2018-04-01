@@ -191,6 +191,12 @@ def trainNN(model, numEpochs):
       hToH2 = h2Params[3:6]
       hToH3 = h2Params[6:]
 
+      # for plotting
+      xRefPos = []
+      xRefNeg = []
+      yRefPos = []
+      yRefNeg = []
+
       ### Print to LED Matrix ###
       print('Output Layer:')
       outputMatrix = []
@@ -246,9 +252,13 @@ def trainNN(model, numEpochs):
             if compute > 0.5:
                print("1", end='')
                outputList.append(1)
+               xRefPos.append(x)
+               yRefPos.append(y)
             else:
                print("0", end='')
                outputList.append(0)
+               xRefNeg.append(x)
+               yRefNeg.append(y)
 
          outputMatrix.append(outputList)
          hOne1.append(hO1)
@@ -261,6 +271,11 @@ def trainNN(model, numEpochs):
          print()
 
       print()
+
+      # plot output prediction
+      plt.clf()
+      plt.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
+      plt.pause(0.1)
 
       # display data on LED matrices
       sendMatrix(hOne1, 1, 2)
@@ -300,8 +315,10 @@ if __name__ == '__main__':
 
    # reference solution
    plt.figure(1)
-   plt.plot(xRefPos, yRefPos, '+', xRefNeg, yRefNeg, 'o')
+   plt.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
    plt.pause(0.5)
+
+   plt.figure(2)
 
    # train model
    trainNN(model, numEpochs)
