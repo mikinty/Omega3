@@ -23,4 +23,14 @@ def circle(x, y):
 def diag(x, y):
   return (int(x) == int(y)) or (int(x) == int(y+1)) or (int(x) == int(y-1))
 
+def chess(x, y):
+  return (int(x) % 2 != 0) and (int(y) % 2 != 0)
 
+def line(x, y):
+  return x == y
+
+def corners(x, y):
+  return (x >= 2 and y >= 2) or (x >= 2 and y <= -3) or (x <= -3 and y >= 2) or (x <= -3 and y <= -3)
+
+def kite(x, y):
+  return ((abs(y) >= abs(x)) or (y <= -abs(x)))

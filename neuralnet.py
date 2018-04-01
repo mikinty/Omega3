@@ -30,7 +30,7 @@ print(ports)
 arduinoS1 = [p[0] for p in ports if (hidden1Serial in p[2])]
 arduinoS2 = [p[0] for p in ports if (hidden2Serial in p[2])]
 
-print(arduinoS1, arduinoS2)
+# print(arduinoS1, arduinoS2)
 
 ard1 = serial.Serial(arduinoS1[0], timeout=0)
 ard2 = serial.Serial(arduinoS2[0], timeout=0)
@@ -41,12 +41,13 @@ netOne = FeedForwardNetwork()
 
 # parameters
 numEpochs = 300
+learningRate = 10
 numFeatures = 7
 numTrain = 100
 numHiddenUnits1 = 3
 numHiddenUnits2 = 3
 (xMin, xMax, yMin, yMax) = (-4, 4, -4, 4) # dim. of LED matrix
-displayRate = 0.5 # period of display time
+displayRate = 0.2 # period of display time
 
 def sigmoid(x):
   return 1 / (1 + math.exp(-x))
@@ -109,7 +110,10 @@ def generateData(N, funNumber):
         1: targetFuncs.xGeZero,
         2: targetFuncs.checkerboard,
         3: targetFuncs.circle,
-        4: targetFuncs.diag
+        4: targetFuncs.diag,
+        5: targetFuncs.chess,
+        6: targetFuncs.corners,
+        7: targetFuncs.kite
       }
 
       # Labels for input data
@@ -178,6 +182,7 @@ def trainNN(model, numEpochs):
       # print(params)
 
       # TRAIN NN and report error
+      model.trainEpochs(learningRate)
       print('Model train error:', model.train()) #error
 
       # parse params
@@ -198,7 +203,7 @@ def trainNN(model, numEpochs):
       yRefNeg = []
 
       ### Print to LED Matrix ###
-      print('Output Layer:')
+      # print('Output Layer:')
       outputMatrix = []
       hOne1 = []
       hOne2 = []
@@ -249,13 +254,13 @@ def trainNN(model, numEpochs):
             hT2.append(temp22)
             hT3.append(temp23)
 
-            if compute > 0.5:
-               print("1", end='')
+            if compute >= 0.5:
+               # print("1", end='')
                outputList.append(1)
                xRefPos.append(x)
                yRefPos.append(y)
             else:
-               print("0", end='')
+               # print("0", end='')
                outputList.append(0)
                xRefNeg.append(x)
                yRefNeg.append(y)
@@ -268,14 +273,19 @@ def trainNN(model, numEpochs):
          hTwo2.append(hT2)
          hTwo3.append(hT3)
 
-         print()
+         #print()
 
-      print()
+      #print()
 
       # plot output prediction
+      ax2.cla()
+      ax2.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
+      plt.pause(0.1)
+      """
       plt.clf()
       plt.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
       plt.pause(0.1)
+      """
 
       # display data on LED matrices
       sendMatrix(hOne1, 1, 2)
@@ -289,8 +299,24 @@ def trainNN(model, numEpochs):
 
 
 if __name__ == '__main__':
+   functionList = {
+        0: 'y >= 0',
+        1: 'x >= 0',
+        2: 'checkerboard',
+        3: 'circle',
+        4: 'diagonal',
+        5: 'chess',
+        6: 'corners',
+        7: 'kite'
+      }
+
+   print("FUNCTION LIST:")
+   for x in range(8):
+      print(str(x)+".", functionList[x])
+
+   num = min(int(input("What function would you like to try? ")), 7)
+
    # creating input data
-   num = max(int(input("What function would you like to try?")), 4)
    inputData, outputData, refFunc = generateData(numTrain, num)
 
    # set up model
@@ -305,21 +331,48 @@ if __name__ == '__main__':
    yRefPos = []
    yRefNeg = []
 
+   # REF FUNCTION
    for x in range(-4, 4):
       for y in range(-4, 4):
          if refFunc(x, y):
             xRefPos.append(x)
             yRefPos.append(y)
+            print('+', end='')
          else:
             xRefNeg.append(x)
             yRefNeg.append(y)
+            print('-', end='')
+      print()
+
+   xrp = []
+   yrp = []
+   xrn = []
+   yrn = []
+
+   for x in range(len(inputData)):
+      tempX = int(inputData[x][0])
+      tempY = int(inputData[x][1])
+
+      if outputData[x][0] > 0:
+         xrp.append(tempX)
+         yrp.append(tempY)
+      else:
+         xrn.append(tempX)
+         yrn.append(tempY)
+
 
    # reference solution
-   plt.figure(1)
-   plt.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
-   plt.pause(0.5)
+   global f, ax1, ax2
 
-   plt.figure(2)
+   f,(ax1, ax3, ax2) = plt.subplots(1, 3)
+   ax1.set_xlim([-5, 4])
+   ax1.set_ylim([-5, 4])
+   ax2.set_xlim([-5, 4])
+   ax2.set_ylim([-5, 4])
+   ax3.set_xlim([-5, 4])
+   ax3.set_ylim([-5, 4])
+   ax1.plot(xRefPos, yRefPos, 'g+', xRefNeg, yRefNeg, 'ro', markersize=20)
+   ax3.plot(xrp, yrp, 'g+', xrn, yrn, 'ro', markersize=20)
 
    # train model
    trainNN(model, numEpochs)
