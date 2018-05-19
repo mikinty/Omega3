@@ -7,6 +7,7 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
+// initialize matrix objects
 Adafruit_8x8matrix h1 = Adafruit_8x8matrix();
 Adafruit_8x8matrix h2 = Adafruit_8x8matrix();
 Adafruit_8x8matrix h3 = Adafruit_8x8matrix();
@@ -21,7 +22,6 @@ int adrTotal = 9; // numAddr * adrLength
 int adrPins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10};
 int addresses[9]; // store the addresses
 int currMatrix = 1;
-// int dAdr[3]; // digital version of address
 
 // finds the address indicated by startPin - (startPin + 2)
 int findAddr(int startPin) {
@@ -35,7 +35,6 @@ int findAddr(int startPin) {
     }
   }
   
-  // dAdr[startPin/3] = currAdr;
   return currAdr;
 }
 
@@ -48,10 +47,11 @@ void setup() {
   }
   
   /*** SERIAL PORT ***/
-  // baudrate of 9600
+  // baudrate of 9600 for serial communication
   Serial.begin(9600);
   
-  // do not wait for Serial communication
+  // don't wait for serial communication, 
+  // allows for faster matrix display update
   Serial.setTimeout(0);
   
   delay(500);
@@ -63,6 +63,8 @@ void setup() {
   int adr1 = findAddr(2);
   int adr2 = findAddr(5);
   int adr3 = findAddr(8);
+
+  // report the detecteed addresses
   Serial.print("Addresses: ");
   Serial.print(adr1);
   Serial.print(" ");
@@ -141,11 +143,19 @@ void setup() {
   }
 }
 
+/*** Main program ***/
+/* Note that we assume that the user never moves blocks during a 
+ * single run, because otherwise, we would have to redetect matrices
+ * before each update. However, this is a reasonable assumption to make,
+ * because practically, there is no reason you should be changing 
+ * your NN architecture in the middle of training.
+ */
 void loop() {
   if(Serial.available()) {
     // read input from serial
     int in = Serial.read();
     
+    /*** Interpret serial communication ***/
     // start signal for printing a matrix
     if(in == 's') {
       // reset values
@@ -175,12 +185,10 @@ void loop() {
       h1.writeDisplay();
       currMatrix = 1;
     } else if (in == '3') {
-      
       h2.clear();
       h2.writeDisplay();
       currMatrix = 2;
     } else if (in == '4') {
-      
       h3.clear();
       h3.writeDisplay();
       currMatrix = 3;
