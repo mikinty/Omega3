@@ -1,6 +1,6 @@
 /*
  * The following program is an LED matrix listener to serial port in order to display
- * neural network data. Each arduino controls one hidden layer.
+ * neural network data. Each Arduino controls one hidden layer, which has 3 LED matrices.
  */
 #include <SPI.h>
 #include <Wire.h>
@@ -143,8 +143,11 @@ void setup() {
   }
 }
 
-/*** Main program ***/
-/* Note that we assume that the user never moves blocks during a 
+
+/** 
+ * Main Program
+ * 
+ * Note that we assume that the user never moves blocks during a 
  * single run, because otherwise, we would have to redetect matrices
  * before each update. However, this is a reasonable assumption to make,
  * because practically, there is no reason you should be changing 
