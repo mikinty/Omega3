@@ -1,7 +1,9 @@
-### Library of target functions to use for NN ###
+'''
+Library of target functions to use for NN
 
-# Since we are only dealing with binary data, we require that
-# all functions return either true or false for 1, 0 respectively
+Since we are only dealing with binary data, we require that
+all functions return either True or False for 1, 0 respectively
+'''
 
 from math import sqrt
 
