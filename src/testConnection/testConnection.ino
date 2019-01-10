@@ -1,4 +1,7 @@
 /*************************************************** 
+  Minimal working example of testing a connection with LED matrix 
+  via I2C connection. License for the library included below:
+  
   This is a library for our I2C LED Backpacks
 
   Designed specifically to work with the Adafruit LED Matrix backpacks 
@@ -71,7 +74,7 @@ static const uint8_t PROGMEM
     B00111100 };
 
 void loop() {
-  // detect address
+  // detect the hard-coded address for the LED matrix.
   int currAdr = 0;
   Serial.print("Detected Address: ");
   for (int i = 0; i < adrLength; i++) {
@@ -82,6 +85,7 @@ void loop() {
       adr[i] = 0;
     }
   }
+
   Serial.print(currAdr);
   Serial.print(" (");
   Serial.print(adr[2]);
@@ -103,47 +107,4 @@ void loop() {
   matrix.drawBitmap(0, 0, frown_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
   delay(500);
-
-  /*
-  matrix.clear();      // clear display
-  matrix.drawPixel(0, 0, LED_ON);  
-  matrix.writeDisplay();  // write the changes we just made to the display
-  delay(500);
-
-  matrix.clear();
-  matrix.drawLine(0,0, 7,7, LED_ON);
-  matrix.writeDisplay();  // write the changes we just made to the display
-  delay(500);
-
-  matrix.clear();
-  matrix.drawRect(0,0, 8,8, LED_ON);
-  matrix.fillRect(2,2, 4,4, LED_ON);
-  matrix.writeDisplay();  // write the changes we just made to the display
-  delay(500);
-
-  matrix.clear();
-  matrix.drawCircle(3,3, 3, LED_ON);
-  matrix.writeDisplay();  // write the changes we just made to the display
-  delay(500);
-
-  matrix.setTextSize(1);
-  matrix.setTextWrap(false);  // we dont want text to wrap so it scrolls nicely
-  matrix.setTextColor(LED_ON);
-  for (int8_t x=0; x>=-36; x--) {
-    matrix.clear();
-    matrix.setCursor(x,0);
-    matrix.print("Hello");
-    matrix.writeDisplay();
-    delay(100);
-  }
-  matrix.setRotation(3);
-  for (int8_t x=7; x>=-36; x--) {
-    matrix.clear();
-    matrix.setCursor(x,0);
-    matrix.print("World");
-    matrix.writeDisplay();
-    delay(100);
-  }
-  matrix.setRotation(0);
-  */
 }
