@@ -1,6 +1,6 @@
 # Omega<sup>3</sup> Source Code
 
-This directory contains the source code used to implement Omega<sup>3</sup>. 
+This directory contains the source code used to implement Omega<sup>3</sup>.
 Here, we have files that test and implement the Raspberry Pi to Arduino communication interface.
 The idea is that we have a Raspberry Pi that runs the neural network training code, and then sends data to the Arduino, which then displays the information on the LED matrix peripherals.
 
