@@ -1,33 +1,19 @@
-/*************************************************** 
-  Minimal working example of testing a connection with LED matrix 
-  via I2C connection. License for the library included below:
-  
-  This is a library for our I2C LED Backpacks
-
-  Designed specifically to work with the Adafruit LED Matrix backpacks 
-  ----> http://www.adafruit.com/products/872
-  ----> http://www.adafruit.com/products/871
-  ----> http://www.adafruit.com/products/870
-
-  These displays use I2C to communicate, 2 pins are required to 
-  interface. There are multiple selectable I2C addresses. For backpacks
-  with 2 Address Select pins: 0x70, 0x71, 0x72 or 0x73. For backpacks
-  with 3 Address Select pins: 0x70 thru 0x77
-
-  Adafruit invests time and resources providing this open source code, 
-  please support Adafruit and open-source hardware by purchasing 
-  products from Adafruit!
-
-  Written by Limor Fried/Ladyada for Adafruit Industries.  
-  BSD license, all text above must be included in any redistribution
- ****************************************************/
-
+/** 
+ * Minimal working example of testing a connection with LED matrix 
+ * via I2C connection. This code is primarily used to test that constructed
+ * neuron blocks work.
+ */
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
 
+/**
+ * Since we have a maximum of 6 matrices, we only need a 3-bit address.
+ * The address pins are detected by inputs on the Arduino. In the code 
+ * below, the adrPins[] define which pins are used to read the address.
+ */
 int adrLength = 3;
 int adrPins[] = {5, 6, 7};
 int adr[3];
@@ -41,37 +27,44 @@ void setup() {
     pinMode(adrPins[i], INPUT); 
   }
   
+  // change this line below to the matrix address that was detected.
   matrix.begin(0x71);
 }
 
+// preset test images
 static const uint8_t PROGMEM
-  smile_bmp[] =
-  { B00111100,
+  smile_bmp[] = { 
+    B00111100,
     B01000010,
     B10100101,
     B10000001,
     B10100101,
     B10011001,
     B01000010,
-    B00111100 },
-  neutral_bmp[] =
-  { B00111100,
+    B00111100 
+  },
+
+  neutral_bmp[] = { 
+    B00111100,
     B01000010,
     B10100101,
     B10000001,
     B10111101,
     B10000001,
     B01000010,
-    B00111100 },
-  frown_bmp[] =
-  { B00111100,
+    B00111100 
+  },
+
+  frown_bmp[] = { 
+    B00111100,
     B01000010,
     B10100101,
     B10000001,
     B10011001,
     B10100101,
     B01000010,
-    B00111100 };
+    B00111100 
+  };
 
 void loop() {
   // detect the hard-coded address for the LED matrix.
@@ -93,6 +86,7 @@ void loop() {
   Serial.print(adr[0]);
   Serial.println(")");
   
+  // display preset images on LED matrix
   matrix.clear();
   matrix.drawBitmap(0, 0, smile_bmp, 8, 8, LED_ON);
   matrix.writeDisplay();
