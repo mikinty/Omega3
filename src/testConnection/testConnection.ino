@@ -4,7 +4,6 @@
  * neuron blocks work.
  */
 #include <Wire.h>
-#include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
 Adafruit_8x8matrix matrix = Adafruit_8x8matrix();
@@ -28,7 +27,7 @@ void setup() {
   }
   
   // change this line below to the matrix address that was detected.
-  matrix.begin(0x71);
+  matrix.begin(0x70);
 }
 
 // preset test images
@@ -85,6 +84,33 @@ void loop() {
   Serial.print(adr[1]);
   Serial.print(adr[0]);
   Serial.println(")");
+
+  // Choose the appropriate matrix
+  switch(currAdr) {
+    case 0:
+      matrix.begin(0x70);
+      break;
+    case 1:
+      matrix.begin(0x71);
+      break;
+    case 2:
+      matrix.begin(0x72);
+      break;
+    case 3:
+      matrix.begin(0x73);
+      break;
+    case 4:
+      matrix.begin(0x74);
+      break;
+    case 5:
+      matrix.begin(0x75);
+      break;
+    case 6:
+      matrix.begin(0x76);
+      break;
+    default:
+      matrix.begin(0x70);
+  }
   
   // display preset images on LED matrix
   matrix.clear();
