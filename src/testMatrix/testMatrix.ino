@@ -1,6 +1,7 @@
 /*
  * The following program is an LED matrix listener to serial port in order to display
- * neural network data. Each Arduino controls one hidden layer, which has 3 LED matrices.
+ * neural network data. The program is designed for an Arduino Mega that controls
+ * all 6 LED matrices in both hidden layers
  */
 #include <SPI.h>
 #include <Wire.h>
