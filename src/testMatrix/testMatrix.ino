@@ -7,145 +7,147 @@
 #include <Adafruit_GFX.h>
 #include "Adafruit_LEDBackpack.h"
 
+#define NUM_MATRIX 6
+#define ADR_LENGTH 3
+#define NUM_FUNCS  7
+
+// for '2', '3', ... representing matrixNum 0, 1, ...
+#define MATRIX_NUM_SEL_OFFSET 50
+#define MATRIX_ADR_OFFSET 0x70
+
 // initialize matrix objects
-Adafruit_8x8matrix h1 = Adafruit_8x8matrix();
-Adafruit_8x8matrix h2 = Adafruit_8x8matrix();
-Adafruit_8x8matrix h3 = Adafruit_8x8matrix();
+Adafruit_8x8matrix MATRICES[6] = {
+  Adafruit_8x8matrix(),
+  Adafruit_8x8matrix(),
+  Adafruit_8x8matrix(),
+  Adafruit_8x8matrix(),
+  Adafruit_8x8matrix(),
+  Adafruit_8x8matrix()
+};
 
 // Keep track of where we're writing on the matrix
 uint16_t curX = 0;
 uint16_t curY = 0;
 
-int numAddr = 3;
-int adrLength = 3;
-int adrTotal = 9; // numAddr * adrLength
-int adrPins[] = {2, 3, 4, 5, 6, 7, 8, 9, 10};
-int addresses[9]; // store the addresses
-int currMatrix = 1;
+// Defines where each LED matrix is addressed to
+const int adrPins[6][3] = {
+  {22, 24, 26}, 
+  {28, 30, 32}, 
+  {34, 36, 38},
+  {40, 42, 44},
+  {46, 48, 50},
+  {51, 52, 53}
+};
 
-// finds the address indicated by startPin - (startPin + 2)
-int findAddr(int startPin) {
+// store the addresses
+int addresses[6][3];
+
+// TODO: FILL THESE OUT
+// Inputs from the function blocks
+const int funcPins[7] = { 23, 25, 27, 29, 31, 33, 35 }; 
+
+int currMatrix = 0;
+
+/**
+ * Finds the address indicated by pins adrPins[matrixNum][0, 1, 2]
+ * 
+ * Also stores the detected address in addresses[6][3]
+ */
+int findAddr(int matrixNum) {
   int currAdr = 0;
-  for (int i = 0; i < adrLength; i++) {
-    if (digitalRead(startPin + i) == HIGH) {
-      addresses[startPin + i] = 1;
+  
+  for (int i = 0; i < ADR_LENGTH; i++) {
+    if (digitalRead(adrPins[matrixNum][i]) == HIGH) {
+      addresses[matrixNum][i] = 1;
       currAdr += 1 << i;
     }  else {
-      addresses[startPin + i] = 0;
+      addresses[matrixNum][i] = 0;
     }
   }
   
   return currAdr;
 }
 
+/**
+ * Tells the Raspberry Pi which function pins are activated
+ */
+void readFuncPins() {
+  Serial.print('f');
+  
+  for (int i = 0; i < NUM_FUNCS; i++) {
+    if (digitalRead(funcPins[i]) == HIGH) {
+      Serial.print(1);
+    } else {
+      Serial.print(0);
+    }
+  }
+}
+
+// Initializes a matrix object
+void initMatrix(int matrixNum, int address) {
+  switch (matrixNum) {
+    case 1:
+      MATRICES[matrixNum].begin(address);
+      break;
+    case 2:
+      MATRICES[matrixNum].begin(address);
+      break;
+    case 3:
+      MATRICES[matrixNum].begin(address);
+      break;
+    case 4:
+      MATRICES[matrixNum].begin(address);
+      break;
+    case 5:
+      MATRICES[matrixNum].begin(address);
+      break;
+    case 6:
+      MATRICES[matrixNum].begin(address);
+      break;
+    default:
+      MATRICES[matrixNum].begin(address);
+  }
+}
 
 void setup() {
-  /*** DIGITAL PINS ***/
-  // set up digital pins to read the address
-  for (int i = 0; i < adrTotal; i++) {
-    pinMode(adrPins[i], INPUT);
+  /*** DIGITAL PIN INPUTS ***/
+  for (int i = 0; i < NUM_MATRIX; i++) {
+    for (int j = 0; j < ADR_LENGTH; j++) {
+      pinMode(adrPins[i][j], INPUT);  
+    }
   }
-  
+
+  for (int i = 0; i < NUM_FUNCS; i++) {
+    pinMode(funcPins[i], INPUT);
+  }
+
   /*** SERIAL PORT ***/
-  // baudrate of 9600 for serial communication
   Serial.begin(9600);
   
-  // don't wait for serial communication, 
-  // allows for faster matrix display update
+  // don't wait for serial comm., allows for faster matrix update
   Serial.setTimeout(0);
   
-  delay(500);
-  
-  /*** Assign matrices ***/
-  // read the addresses
+  /*** I2C SETUP WITH LED MATRICES ***/
   Serial.println("Detecting LED matrices...");
-  
-  int adr1 = findAddr(2);
-  int adr2 = findAddr(5);
-  int adr3 = findAddr(8);
 
-  // report the detecteed addresses
-  Serial.print("Addresses: ");
-  Serial.print(adr1);
-  Serial.print(" ");
-  Serial.print(adr2);
-  Serial.print(" ");
-  Serial.println(adr3);
-  
-  // turn on the matrix according to the address given
-  switch(adr1) {
-    case 1:
-      h1.begin(0x71);
-      break;
-    case 2:
-      h1.begin(0x72);
-      break;
-    case 3:
-      h1.begin(0x73);
-      break;
-    case 4:
-      h1.begin(0x74);
-      break;
-    case 5:
-      h1.begin(0x75);
-      break;
-    case 6:
-      h1.begin(0x76);
-      break;
-    default:
-      h1.begin(0x70);
+  // Initialize matrices according to detected addresses 
+  for (int i = 0; i < NUM_MATRIX; i++) {
+    int addr = findAddr(i);
+    initMatrix(i, addr + MATRIX_ADR_OFFSET);
+
+    // TODO: the rpi should pick up this info to build the architecture
+    Serial.println(addr);
   }
-  
-  switch(adr2) {
-    case 1:
-      h2.begin(0x71);
-      break;
-    case 2:
-      h2.begin(0x72);
-      break;
-    case 3:
-      h2.begin(0x73);
-      break;
-    case 4:
-      h2.begin(0x74);
-      break;
-    case 5:
-      h2.begin(0x75);
-      break;
-    case 6:
-      h2.begin(0x76);
-      break;
-    default:
-      h2.begin(0x70);
-  }
-  
-  switch(adr3) {
-    case 1:
-      h3.begin(0x71);
-      break;
-    case 2:
-      h3.begin(0x72);
-      break;
-    case 3:
-      h3.begin(0x73);
-      break;
-    case 4:
-      h3.begin(0x74);
-      break;
-    case 5:
-      h3.begin(0x75);
-      break;
-    case 6:
-      h3.begin(0x76);
-      break;
-    default:
-      h3.begin(0x70);
-  }
+
+  // Tell the RPi what function blocks are present
+  readFuncPins();
 }
 
 
 /** 
  * Main Program
+ * 
+ * Here, the Arduino listens to display commands from the RPi.
  * 
  * Note that we assume that the user never moves blocks during a 
  * single run, because otherwise, we would have to redetect matrices
@@ -159,48 +161,36 @@ void loop() {
     int in = Serial.read();
     
     /*** Interpret serial communication ***/
-    // start signal for printing a matrix
-    if(in == 's') {
+    
+    /** Start signal for printing a matrix **/
+    if (in == 's') {
       // reset values
       curX = 0;
       curY = 0;
-    } else if (in == '0') { // display values on matrix
+    } 
+    /** Writing values on the matrix **/
+    else if (in == '0') { // display values on matrix
       curX++;
     } else if (in == '1') {
-      switch(currMatrix) {
-        case 1:
-          h1.drawPixel(curX,curY, LED_ON);
-          h1.writeDisplay();
-          break;
-        case 2:
-          h2.drawPixel(curX,curY, LED_ON);
-          h2.writeDisplay();
-          break;
-        case 3:
-          h3.drawPixel(curX,curY, LED_ON);
-          h3.writeDisplay();
-          break;
-      }
+      MATRICES[currMatrix].drawPixel(curX, curY, LED_ON);
       
       curX++; // increment for next spot
-    } else if (in == '2') { // choose another matrix to control
-      h1.clear();
-      h1.writeDisplay();
-      currMatrix = 1;
-    } else if (in == '3') {
-      h2.clear();
-      h2.writeDisplay();
-      currMatrix = 2;
-    } else if (in == '4') {
-      h3.clear();
-      h3.writeDisplay();
-      currMatrix = 3;
+    } 
+    /** Choose another matrix to control **/
+    else {
+      currMatrix = in - MATRIX_NUM_SEL_OFFSET;
+      MATRICES[currMatrix].clear();
     }
     
     // wrap around the matrix rows
     if (curX >= 8) {
-      curX=0;
+      curX = 0;
       curY++;
+    }
+
+    // display matrices
+    for (int i = 0; i < NUM_MATRIX; i++) {
+      MATRICES[i].writeDisplay();
     }
   }
 }
