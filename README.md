@@ -2,6 +2,8 @@
 
 A real-time visualization of neural networks to uncover their inner workings and help educate people about machine learning.
 
+See the full paper at https://ieeexplore.ieee.org/document/8882046
+
 ## Directory Structure
 
 - `CAD files/`: the CAD files used in the fabrication of Omega<sup>3</sup>.
